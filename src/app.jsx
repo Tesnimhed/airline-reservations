@@ -12,6 +12,9 @@ import UserFlights from './pages/UserFlights';
 import UserReservations from './pages/UserReservations';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
+import UsersManagement from './pages/AdminUsers';
+import LandingPage from './pages/LandingPage';
+
 
 const AppRoutes = () => {
   const { user } = useAuth();
@@ -19,12 +22,15 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route element={<AuthLayout />}>
-        <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/" />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/" />} />
       </Route>
       
       {user?.role === 'admin' && (
         <Route path="/" element={<AppLayout />}>
           <Route index element={<AdminDashboard />} />
+          <Route path="/users" element={<UsersManagement />} />
           <Route path="flights" element={<AdminFlights />} />
           <Route path="reservations" element={<AdminReservations />} />
           <Route path="*" element={<Navigate to="/" />} />

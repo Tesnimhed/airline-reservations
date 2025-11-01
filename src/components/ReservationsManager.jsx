@@ -8,9 +8,13 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useToast } from './ui/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { useAuth } from '../contexts/AuthContext';
 
 const ReservationsManager = ({ flights, reservations, addReservation, updateReservation, deleteReservation }) => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingReservation, setEditingReservation] = useState(null);
@@ -40,7 +44,12 @@ const ReservationsManager = ({ flights, reservations, addReservation, updateRese
       setIsEditDialogOpen(false);
       setEditingReservation(null);
     } else {
-      addReservation(formData);
+      const newReservation = {
+        ...formData,
+        userId: user.id,
+        id: Date.now().toString()
+      };
+      addReservation(newReservation);
       toast({
         title: "✅ Réservation créée",
         description: "La réservation a été créée avec succès",
@@ -118,17 +127,19 @@ const ReservationsManager = ({ flights, reservations, addReservation, updateRese
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Label>Passagers</Label>
-          <Button type="button" variant="outline" size="sm" onClick={addPassenger}>
-            <Plus className="w-4 h-4 mr-2" />
-            Ajouter un passager
-          </Button>
+          {!isAdmin && (
+            <Button type="button" variant="outline" size="sm" onClick={addPassenger}>
+              <Plus className="w-4 h-4 mr-2" />
+              Ajouter un passager
+            </Button>
+          )}
         </div>
 
         {formData.passengers.map((passenger, index) => (
           <div key={index} className="p-4 border border-slate-200 rounded-lg space-y-3">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Passager {index + 1}</span>
-              {formData.passengers.length > 1 && (
+              {!isAdmin && formData.passengers.length > 1 && (
                 <Button
                   type="button"
                   variant="ghost"
@@ -149,6 +160,7 @@ const ReservationsManager = ({ flights, reservations, addReservation, updateRese
                   value={passenger.firstName}
                   onChange={(e) => updatePassenger(index, 'firstName', e.target.value)}
                   required
+                  disabled={isAdmin}
                 />
               </div>
               <div>
@@ -158,6 +170,7 @@ const ReservationsManager = ({ flights, reservations, addReservation, updateRese
                   value={passenger.lastName}
                   onChange={(e) => updatePassenger(index, 'lastName', e.target.value)}
                   required
+                  disabled={isAdmin}
                 />
               </div>
             </div>
@@ -171,6 +184,7 @@ const ReservationsManager = ({ flights, reservations, addReservation, updateRese
                   value={passenger.email}
                   onChange={(e) => updatePassenger(index, 'email', e.target.value)}
                   required
+                  disabled={isAdmin}
                 />
               </div>
               <div>
@@ -181,6 +195,7 @@ const ReservationsManager = ({ flights, reservations, addReservation, updateRese
                   value={passenger.phone}
                   onChange={(e) => updatePassenger(index, 'phone', e.target.value)}
                   required
+                  disabled={isAdmin}
                 />
               </div>
             </div>
@@ -188,11 +203,13 @@ const ReservationsManager = ({ flights, reservations, addReservation, updateRese
         ))}
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
-        <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-          {editingReservation ? 'Modifier' : 'Créer'}
-        </Button>
-      </div>
+      {!isAdmin && (
+        <div className="flex justify-end gap-2 pt-4">
+          <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+            {editingReservation ? 'Modifier' : 'Créer'}
+          </Button>
+        </div>
+      )}
     </form>
   );
 
@@ -220,24 +237,32 @@ const ReservationsManager = ({ flights, reservations, addReservation, updateRese
     <div className="p-0">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900 mb-2">Gestion des réservations</h2>
-          <p className="text-slate-600">Gérez toutes vos réservations de vols</p>
+          <h2 className="text-3xl font-bold text-slate-900 mb-2">
+            {isAdmin ? "Toutes les réservations" : "Gestion des réservations"}
+          </h2>
+          <p className="text-slate-600">
+            {isAdmin 
+              ? "Liste complète des réservations clients" 
+              : "Gérez toutes vos réservations de vols"}
+          </p>
         </div>
         
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700" onClick={resetForm}>
-              <Plus className="w-4 h-4 mr-2" />
-              Nouvelle réservation
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Créer une nouvelle réservation</DialogTitle>
-            </DialogHeader>
-            <ReservationForm />
-          </DialogContent>
-        </Dialog>
+        {!isAdmin && (
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700" onClick={resetForm}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nouvelle réservation
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Créer une nouvelle réservation</DialogTitle>
+              </DialogHeader>
+              <ReservationForm />
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {reservations.length > 0 ? (
@@ -271,42 +296,44 @@ const ReservationsManager = ({ flights, reservations, addReservation, updateRese
                   <div className="flex items-center gap-3">
                     {getStatusBadge(reservation.status)}
                     
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(reservation)}
-                        className="hover:bg-blue-50 hover:text-blue-600"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="hover:bg-red-50 hover:text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Êtes-vous sûr de vouloir supprimer cette réservation ? Cette action est irréversible.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Annuler</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(reservation.id)} className="bg-red-600 hover:bg-red-700">
-                              Supprimer
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
+                    {!isAdmin && (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(reservation)}
+                          className="hover:bg-blue-50 hover:text-blue-600"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="hover:bg-red-50 hover:text-red-600"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Êtes-vous sûr de vouloir supprimer cette réservation ? Cette action est irréversible.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(reservation.id)} className="bg-red-600 hover:bg-red-700">
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -337,19 +364,27 @@ const ReservationsManager = ({ flights, reservations, addReservation, updateRese
           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Calendar className="w-8 h-8 text-slate-400" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Aucune réservation</h3>
-          <p className="text-slate-600 mb-6">Commencez par créer votre première réservation</p>
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+            {isAdmin ? "Aucune réservation" : "Aucune réservation"}
+          </h3>
+          <p className="text-slate-600 mb-6">
+            {isAdmin 
+              ? "Aucune réservation n’a été effectuée." 
+              : "Commencez par créer votre première réservation"}
+          </p>
         </div>
       )}
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Modifier la réservation</DialogTitle>
-          </DialogHeader>
-          <ReservationForm />
-        </DialogContent>
-      </Dialog>
+      {!isAdmin && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Modifier la réservation</DialogTitle>
+            </DialogHeader>
+            <ReservationForm />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
