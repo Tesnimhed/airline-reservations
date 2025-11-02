@@ -41,11 +41,6 @@ const Header = ({ toggleSidebar }) => {
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
           </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-700">
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Déconnexion</span>
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>

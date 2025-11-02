@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
     id: '1',
     name: 'Admin Utilisateur',
     email: 'admin@example.com',
-    role: 'admin' // ou 'user' si tu veux tester le mode client
+    role: 'user' // ou 'user' si tu veux tester le mode client
   });
 
   const logout = () => {

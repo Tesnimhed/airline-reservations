@@ -7,7 +7,7 @@ import { cn } from '../lib/utils';
 import { useAuth } from '../contexts/AuthContext';
 
 const Sidebar = ({ isOpen }) => {
-  const { user } = useAuth(); // ← récupère l'utilisateur réel
+  const { user , logout } = useAuth(); // ← récupère l'utilisateur réel
   const location = useLocation();
 
   // Définir les items selon le rôle
@@ -18,7 +18,7 @@ const Sidebar = ({ isOpen }) => {
       return [
         { path: '/admin', label: 'Tableau de bord', icon: LayoutDashboard },
         { path: '/flights', label: 'Vols', icon: Plane },
-        { path: '/admin-reservations', label: 'Réservations', icon: Calendar },
+        { path: '/reservations', label: 'Réservations', icon: Calendar },
         { path: '/users', label: 'Utilisateurs', icon: UserIcon },
       ];
     } else {
@@ -74,7 +74,7 @@ const Sidebar = ({ isOpen }) => {
       {/* Déconnexion */}
       <div className="p-4 border-t border-slate-200">
         <motion.button
-          onClick={() => console.log('Déconnexion')}
+          onClick={logout}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-all"
           whileHover={{ x: isOpen ? 4 : 0 }}
         >
